@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "racing-data-modernized"
+version = "1.0.0b11"
+description = "Modernized fork experiments for racing_data analysis layer"
+readme = "README.rst"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+  { name = "Jason Green" }
+]
+dependencies = [
+  "pytz",
+  "tzlocal"
+]
+
+[project.optional-dependencies]
+modern-test = [
+  "pytest"
+]
+
+[tool.pytest.ini_options]
+testpaths = ["modern_tests"]
+addopts = "-q --confcutdir=modern_tests"
