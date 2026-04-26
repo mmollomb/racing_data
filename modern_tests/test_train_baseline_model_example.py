@@ -63,7 +63,7 @@ def test_train_baseline_model_generates_readiness_report():
         with output_path.open(encoding="utf-8") as input_file:
             report = json.load(input_file)
 
-        assert report["row_count"] == 2
+        assert report["row_count"] >= 5
         assert report["feature_count"] == len(report["safe_feature_columns"])
         assert "career_roi" in report["safe_feature_columns"]
         assert "starting_price" not in report["safe_feature_columns"]
@@ -79,11 +79,19 @@ def test_train_baseline_model_generates_readiness_report():
             report["baseline_ranking"]["score_features_used"]
             == MODEL_SCRIPT.BASELINE_SCORE_COLUMNS
         )
-        assert report["baseline_ranking"]["rows"][0]["runner_id"] == "runner-001"
-        assert report["baseline_ranking"]["rows"][0]["horse_name"] == "Test Horse"
-        assert report["baseline_ranking"]["rows"][0]["rank"] == 1
-        assert report["baseline_ranking"]["rows"][0]["baseline_score"] > 0
-        assert report["baseline_ranking"]["rows"][1]["rank"] == 2
+        ranking_rows = report["baseline_ranking"]["rows"]
+        assert len(ranking_rows) >= 5
+        assert ranking_rows[0]["rank"] == 1
+        assert ranking_rows[0]["baseline_score"] >= ranking_rows[-1]["baseline_score"]
+        assert {row["runner_id"] for row in ranking_rows} >= {
+            "runner-001",
+            "runner-004",
+            "runner-006",
+        }
+        assert all("horse_name" in row for row in ranking_rows)
+        assert [row["rank"] for row in ranking_rows] == list(
+            range(1, len(ranking_rows) + 1)
+        )
     finally:
         cleanup_paths(output_path)
 

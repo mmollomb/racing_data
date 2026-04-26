@@ -1,5 +1,5 @@
 {
-  "row_count": 2,
+  "row_count": 6,
   "feature_count": 34,
   "safe_feature_columns": [
     "race_distance",
@@ -70,16 +70,40 @@
     ],
     "rows": [
       {
-        "runner_id": "runner-001",
-        "horse_name": "Test Horse",
-        "baseline_score": 0.5,
+        "runner_id": "runner-004",
+        "horse_name": "Desert Echo",
+        "baseline_score": 0.880953,
         "rank": 1
       },
       {
-        "runner_id": "runner-002",
-        "horse_name": "Second Horse",
-        "baseline_score": 0.261905,
+        "runner_id": "runner-001",
+        "horse_name": "Harbour Light",
+        "baseline_score": 0.523809,
         "rank": 2
+      },
+      {
+        "runner_id": "runner-006",
+        "horse_name": "Silver Comet",
+        "baseline_score": 0.452381,
+        "rank": 3
+      },
+      {
+        "runner_id": "runner-005",
+        "horse_name": "Midnight Reef",
+        "baseline_score": 0.404762,
+        "rank": 4
+      },
+      {
+        "runner_id": "runner-002",
+        "horse_name": "River Crown",
+        "baseline_score": 0.323809,
+        "rank": 5
+      },
+      {
+        "runner_id": "runner-003",
+        "horse_name": "Coastal Star",
+        "baseline_score": -0.095238,
+        "rank": 6
       }
     ]
   }
