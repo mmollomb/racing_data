@@ -121,6 +121,35 @@ The report includes:
 
 The bundled sample data is intentionally small. The ranking is a transparent toy baseline for pipeline validation, not a production prediction model.
 
+Local race ranking CSV example
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To write a clean race ranking CSV from the generated feature table, run:
+
+.. code-block:: cmd
+
+   python examples\rank_race.py
+
+You can also pass explicit paths:
+
+.. code-block:: cmd
+
+   python examples\rank_race.py --input data\examples\runner_features.csv --output data\examples\race_rankings.csv
+
+This command reads ``data/examples/runner_features.csv`` and writes ``data/examples/race_rankings.csv``.
+
+The score is a simple arithmetic mean of these safe historical columns:
+
+* ``career_win_pct``
+* ``career_roi``
+* ``last_10_win_pct``
+* ``last_10_place_pct``
+* ``on_track_win_pct``
+* ``at_distance_win_pct``
+* ``with_jockey_win_pct``
+
+The ranking CLI does not use ``starting_price``, ``result``, or ``current_performance_profit`` in scoring. It ranks runners within each ``race_key`` and breaks score ties by ``runner_id`` ascending.
+
 Expected local outputs
 ~~~~~~~~~~~~~~~~~~~~~~
 
@@ -128,6 +157,7 @@ Running the local MVP commands produces:
 
 * ``data/examples/runner_features.csv``
 * ``data/examples/model_report.json``
+* ``data/examples/race_rankings.csv``
 
 MVP scope note
 ~~~~~~~~~~~~~~
