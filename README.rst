@@ -150,6 +150,23 @@ The score is a simple arithmetic mean of these safe historical columns:
 
 The ranking CLI does not use ``starting_price``, ``result``, or ``current_performance_profit`` in scoring. It ranks runners within each ``race_key`` and breaks score ties by ``runner_id`` ascending.
 
+Run the full local ranking workflow
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To run the end-to-end local MVP in one command, run:
+
+.. code-block:: cmd
+
+   python examples\run_local_ranking_workflow.py
+
+You can also pass explicit paths:
+
+.. code-block:: cmd
+
+   python examples\run_local_ranking_workflow.py --input data\examples\sample_runner_history.csv --features-output data\examples\runner_features.csv --rankings-output data\examples\race_rankings.csv --report-output data\examples\model_report.json
+
+This wrapper reuses the existing local feature builder, race ranker, and model-readiness report flow. It writes the feature table, race rankings, and JSON report, then prints a short summary with the number of rows written and the top-ranked runner for each race.
+
 Expected local outputs
 ~~~~~~~~~~~~~~~~~~~~~~
 
