@@ -60,6 +60,12 @@ To build a small local file-based feature table, run:
 
    python examples\build_feature_table.py
 
+You can also pass explicit paths:
+
+.. code-block:: cmd
+
+   python examples\build_feature_table.py --input data\examples\sample_runner_history.csv --output data\examples\runner_features.csv
+
 This example reads input from ``data/examples/sample_runner_history.csv`` and writes output to ``data/examples/runner_features.csv``.
 
 It uses the existing ``racing_data`` entity classes while avoiding the legacy ``Provider``, scraper, database, ``cache_requests``, ``redislite``, and ingestion paths.

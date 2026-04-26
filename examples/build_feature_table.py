@@ -1,3 +1,4 @@
+import argparse
 import csv
 from collections import defaultdict
 from datetime import datetime, timezone
@@ -7,8 +8,8 @@ from racing_data import Horse, Meet, Performance, PerformanceList, Race, Runner
 
 
 ROOT = Path(__file__).resolve().parents[1]
-INPUT_PATH = ROOT / "data" / "examples" / "sample_runner_history.csv"
-OUTPUT_PATH = ROOT / "data" / "examples" / "runner_features.csv"
+DEFAULT_INPUT = Path("data/examples/sample_runner_history.csv")
+DEFAULT_OUTPUT = Path("data/examples/runner_features.csv")
 
 
 class DummyScraper:
@@ -71,6 +72,28 @@ def format_value(value):
         return f"{value:.6f}".rstrip("0").rstrip(".")
 
     return str(value)
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Build a local feature table from runner history CSV data."
+    )
+    parser.add_argument(
+        "--input",
+        default=str(DEFAULT_INPUT),
+        help="Input CSV path, relative to the repository root unless absolute.",
+    )
+    parser.add_argument(
+        "--output",
+        default=str(DEFAULT_OUTPUT),
+        help="Output CSV path, relative to the repository root unless absolute.",
+    )
+    return parser.parse_args()
+
+
+def resolve_repo_path(path_value):
+    path = Path(path_value)
+    return path if path.is_absolute() else ROOT / path
 
 
 def load_runner_groups(input_path):
@@ -209,16 +232,19 @@ def write_feature_table(feature_rows, output_path):
 
 
 def main():
+    args = parse_args()
     provider = LocalFileProvider()
-    groups = load_runner_groups(INPUT_PATH)
+    input_path = resolve_repo_path(args.input)
+    output_path = resolve_repo_path(args.output)
+    groups = load_runner_groups(input_path)
 
     feature_rows = []
     for runner_id, rows in sorted(groups.items()):
         runner = build_runner(provider, runner_id, rows)
         feature_rows.append(build_feature_row(runner_id, runner))
 
-    write_feature_table(feature_rows, OUTPUT_PATH)
-    print(f"Wrote {len(feature_rows)} feature rows to {OUTPUT_PATH}")
+    write_feature_table(feature_rows, output_path)
+    print(f"Wrote {len(feature_rows)} feature rows to {output_path}")
 
 
 if __name__ == "__main__":
