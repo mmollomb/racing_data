@@ -98,6 +98,12 @@ class Runner(Entity):
     def carrying(self):
         """Return this runner's listed weight less allowances"""
 
+        if self['weight'] is None:
+            return None
+
+        if self['jockey_claiming'] is None:
+            return self['weight']
+
         return self['weight'] - self['jockey_claiming']
 
     @property
