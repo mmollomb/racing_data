@@ -1,0 +1,83 @@
+{
+  "row_count": 2,
+  "feature_count": 34,
+  "safe_feature_columns": [
+    "race_distance",
+    "carrying",
+    "actual_weight",
+    "actual_distance",
+    "career_starts",
+    "career_wins",
+    "career_places",
+    "career_win_pct",
+    "career_second_pct",
+    "career_third_pct",
+    "career_roi",
+    "career_earnings",
+    "career_earnings_potential",
+    "career_result_potential",
+    "last_10_wins",
+    "last_10_places",
+    "last_10_win_pct",
+    "last_10_place_pct",
+    "last_10_starts",
+    "last_12_months_starts",
+    "at_distance_starts",
+    "at_distance_win_pct",
+    "on_track_starts",
+    "on_track_win_pct",
+    "on_good_starts",
+    "on_good_win_pct",
+    "on_soft_starts",
+    "on_soft_win_pct",
+    "with_jockey_starts",
+    "with_jockey_win_pct",
+    "previous_performance_result",
+    "previous_performance_starting_price",
+    "spell_days",
+    "up"
+  ],
+  "excluded_leakage_columns": [
+    "starting_price",
+    "result",
+    "current_performance_profit"
+  ],
+  "identifier_context_columns_excluded": [
+    "runner_id"
+  ],
+  "review_before_modelling_columns_excluded": [
+    "horse_name",
+    "race_date",
+    "race_track",
+    "runner_number"
+  ],
+  "outcome_target_columns_available": [
+    "starting_price",
+    "result",
+    "current_performance_profit"
+  ],
+  "warning": "Sample data is too small for real modelling. This report is only a baseline readiness check.",
+  "simple_ranking_score": {
+    "score_columns_used": [
+      "career_win_pct",
+      "career_second_pct",
+      "career_third_pct",
+      "last_10_win_pct",
+      "last_10_place_pct",
+      "at_distance_win_pct",
+      "on_track_win_pct",
+      "with_jockey_win_pct",
+      "career_result_potential"
+    ],
+    "rows": [
+      {
+        "runner_id": "runner-001",
+        "simple_score": 0.42963
+      },
+      {
+        "runner_id": "runner-002",
+        "simple_score": 0.272727
+      }
+    ]
+  }
+}

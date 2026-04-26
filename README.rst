@@ -70,7 +70,26 @@ This example reads input from ``data/examples/sample_runner_history.csv`` and wr
 
 It uses the existing ``racing_data`` entity classes while avoiding the legacy ``Provider``, scraper, database, ``cache_requests``, ``redislite``, and ingestion paths.
 
-After adding or running this example, ``python -m pytest`` should still pass with ``39`` tests.
+Baseline model readiness example
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To build a lightweight model-readiness report from the generated feature table, run:
+
+.. code-block:: cmd
+
+   python examples\train_baseline_model.py
+
+You can also pass explicit paths:
+
+.. code-block:: cmd
+
+   python examples\train_baseline_model.py --input data\examples\runner_features.csv --output data\examples\model_report.json
+
+This example reads ``data/examples/runner_features.csv``, excludes leakage/outcome columns such as ``starting_price``, ``result``, and ``current_performance_profit`` from model inputs, and writes a JSON readiness report to ``data/examples/model_report.json``.
+
+The bundled sample data is only large enough for a baseline readiness check, not real model training.
+
+After adding or running these examples, ``python -m pytest`` should still pass for the modern test suite.
 
 Why legacy tests are avoided for now
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
