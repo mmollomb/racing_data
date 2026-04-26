@@ -93,8 +93,13 @@ class Performance(Entity):
     def speed(self):
         """Return the average speed of the horse/jockey for this performance"""
 
-        if self.actual_distance is not None and self['winning_time'] is not None and self['winning_time'] > 0:
-            return self.actual_distance / self['winning_time']
+        if self.actual_distance is None:
+            return None
+
+        if self['winning_time'] is None or self['winning_time'] <= 0:
+            return None
+
+        return self.actual_distance / self['winning_time']
 
     @property
     def spell(self):
