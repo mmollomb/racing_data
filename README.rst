@@ -51,6 +51,21 @@ The modern test suite is configured through ``pyproject.toml``. Run:
 
 This runs the Windows-safe modern tests in ``modern_tests``.
 
+Modern local feature example
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To build a small local file-based feature table, run:
+
+.. code-block:: cmd
+
+   python examples\build_feature_table.py
+
+This example reads input from ``data/examples/sample_runner_history.csv`` and writes output to ``data/examples/runner_features.csv``.
+
+It uses the existing ``racing_data`` entity classes while avoiding the legacy ``Provider``, scraper, database, ``cache_requests``, ``redislite``, and ingestion paths.
+
+After adding or running this example, ``python -m pytest`` should still pass with ``39`` tests.
+
 Why legacy tests are avoided for now
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
