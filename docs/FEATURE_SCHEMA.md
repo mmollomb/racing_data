@@ -1,80 +1,84 @@
 # Feature Schema
 
-This document defines the current output schema for the local feature-table generator:
+This document defines the current output contract for the local MVP feature generator on the `modernize-analysis-layer` branch.
 
-- script: `examples/build_feature_table.py`
-- example input: `data/examples/sample_runner_history.csv`
-- example output: `data/examples/runner_features.csv`
+- generator: `examples/build_feature_table.py`
+- sample input: `data/examples/sample_runner_history.csv`
+- sample output: `data/examples/runner_features.csv`
+- report consumer: `examples/train_baseline_model.py`
 
-This is a practical contract for local modelling work on the `modernize-analysis-layer` branch.
+The local MVP is intentionally file-based. It does not depend on live scraping, MongoDB, `Provider`, `cache_requests`, or `redislite`.
 
 ## Leakage policy
 
-Columns classified as `outcome_or_target` must not be used as model inputs for pre-race prediction.
+Columns classified as `outcome/target/leakage` must not be used as model inputs for pre-race ranking.
 
-They may be kept only for:
+They may be used only for:
 
-- labels/targets
 - evaluation
 - reporting
 - sanity checks
+- explicitly target-oriented experiments
 
-If a modelling task is intended to make predictions before the race is run, the default assumption is:
+The current default safe modelling set excludes:
 
-- `outcome_or_target` columns are excluded from the input matrix
-- `review_before_modelling` columns are excluded unless the modelling task explicitly justifies and documents their use
+- `starting_price`
+- `result`
+- `current_performance_profit`
 
-## Current columns
+It also excludes identifier/context columns such as `runner_id`, `race_key`, `horse_name`, `race_date`, `race_track`, and `runner_number`.
 
-| Column | Classification | Practical note |
-|---|---|---|
-| `runner_id` | `identifier/context` | Row identifier for joins and traceability; exclude from model inputs. |
-| `horse_name` | `review_before_modelling` | Useful for inspection, but high-cardinality identity data should be excluded unless explicitly encoded. |
-| `race_date` | `review_before_modelling` | Useful context, but requires an explicit time encoding and train/test split policy. |
-| `race_track` | `review_before_modelling` | Useful context, but should only be used after an explicit categorical encoding decision. |
-| `race_distance` | `pre_race_feature` | Declared race distance; available before the race. |
-| `race_key` | `identifier/context` | Stable per-race identifier derived from date, track, and distance for grouping/reporting. |
-| `runner_number` | `review_before_modelling` | Program number, not barrier; keep only if a modelling use case is explicitly justified. |
-| `carrying` | `pre_race_feature` | Current listed weight less allowances. |
-| `actual_weight` | `pre_race_feature` | Horse weight baseline plus carried weight. |
-| `actual_distance` | `pre_race_feature` | Barrier-adjusted race distance estimate derived from current race context. |
-| `career_starts` | `historical_derived_feature` | Historical career count before the current race. |
-| `career_wins` | `historical_derived_feature` | Historical career wins before the current race. |
-| `career_places` | `historical_derived_feature` | Historical career places before the current race. |
-| `career_win_pct` | `historical_derived_feature` | Historical career win rate. |
-| `career_second_pct` | `historical_derived_feature` | Historical career second-place rate. |
-| `career_third_pct` | `historical_derived_feature` | Historical career third-place rate. |
-| `career_roi` | `historical_derived_feature` | Historical return-on-investment summary. |
-| `career_earnings` | `historical_derived_feature` | Historical prize-money total. |
-| `career_earnings_potential` | `historical_derived_feature` | Historical earnings as a share of prize pools. |
-| `career_result_potential` | `historical_derived_feature` | Historical result-quality aggregate from prior runs. |
-| `last_10_wins` | `historical_derived_feature` | Wins in the most recent up-to-10 prior runs. |
-| `last_10_places` | `historical_derived_feature` | Places in the most recent up-to-10 prior runs. |
-| `last_10_win_pct` | `historical_derived_feature` | Win rate in the most recent up-to-10 prior runs. |
-| `last_10_place_pct` | `historical_derived_feature` | Place rate in the most recent up-to-10 prior runs. |
-| `last_10_starts` | `historical_derived_feature` | Number of prior runs considered in the last-10 window. |
-| `last_12_months_starts` | `historical_derived_feature` | Number of prior runs in the previous 12 months. |
-| `at_distance_starts` | `historical_derived_feature` | Prior starts near the current race distance. |
-| `at_distance_win_pct` | `historical_derived_feature` | Historical win rate near the current race distance. |
-| `on_track_starts` | `historical_derived_feature` | Prior starts on the current track. |
-| `on_track_win_pct` | `historical_derived_feature` | Historical win rate on the current track. |
-| `on_good_starts` | `historical_derived_feature` | Prior starts on good tracks. |
-| `on_good_win_pct` | `historical_derived_feature` | Historical win rate on good tracks. |
-| `on_soft_starts` | `historical_derived_feature` | Prior starts on soft tracks. |
-| `on_soft_win_pct` | `historical_derived_feature` | Historical win rate on soft tracks. |
-| `with_jockey_starts` | `historical_derived_feature` | Prior starts with the same jockey. |
-| `with_jockey_win_pct` | `historical_derived_feature` | Historical win rate with the same jockey. |
-| `starting_price` | `outcome_or_target` | Current-race starting price from `current_performance`; not safe as a default pre-race input. |
-| `result` | `outcome_or_target` | Current-race finishing result; primary label-style field. |
-| `current_performance_profit` | `outcome_or_target` | Current-race derived profit field based on current outcome. |
-| `previous_performance_result` | `historical_derived_feature` | Most recent prior-run finishing result. |
-| `previous_performance_starting_price` | `historical_derived_feature` | Most recent prior-run starting price. |
-| `spell_days` | `pre_race_feature` | Days since the runner’s previous performance. |
-| `up` | `pre_race_feature` | Current run number since last spell of 90 days or more. |
+## Output columns
 
-## Safe modelling input columns
+| Column | Meaning | Source | Type | Blank behavior | Classification |
+|---|---|---|---|---|---|
+| `runner_id` | Stable row identifier for the current runner. | input `runner_id` -> `Runner["runner_id"]` | string | Never blank for valid input. | `identifier/context` |
+| `horse_name` | Horse name for inspection and reporting. | input `horse_name` -> `Runner.horse["name"]` | string | Never blank for valid input. | `identifier/context` |
+| `race_date` | Date of the target race. | `runner.race.meet["date"]` | string (`YYYY-MM-DD`) | Blank only if the race date is missing upstream. | `identifier/context` |
+| `race_track` | Track of the target race. | `runner.race.meet["track"]` | string | Blank only if the race track is missing upstream. | `identifier/context` |
+| `race_distance` | Declared race distance. | `runner.race["distance"]` | integer | Blank if race distance is missing. | `safe model input` |
+| `race_key` | Stable race grouping key built from date, track, and distance. | generated from `race_date + "_" + race_track + "_" + race_distance` | string | Blank only if one of the source race fields is missing. | `identifier/context` |
+| `runner_number` | Program number within the race. | `Runner["number"]` | integer | Blank if runner number is missing. | `identifier/context` |
+| `carrying` | Current listed weight after jockey claim. | `runner.carrying` | float | Blank if runner weight is missing. | `safe model input` |
+| `actual_weight` | Horse-weight baseline plus carried weight. | `runner.actual_weight` | float | Falls back to horse baseline weight if carrying is missing. | `safe model input` |
+| `actual_distance` | Barrier-adjusted race distance estimate. | `runner.actual_distance` | float | Blank if race distance is missing. | `safe model input` |
+| `career_starts` | Number of historical starts before the current race. | `runner.career.starts` | integer | `0` when there are no historical performances. | `derived historical feature` |
+| `career_wins` | Historical win count before the current race. | `runner.career.wins` | integer | `0` when there are no historical wins. | `derived historical feature` |
+| `career_places` | Historical place count before the current race. | `runner.career.places` | integer | `0` when there are no historical placings. | `derived historical feature` |
+| `career_win_pct` | Historical win rate. | `runner.career.win_pct` | float | Blank when the career list is empty. | `derived historical feature` |
+| `career_second_pct` | Historical second-place rate. | `runner.career.second_pct` | float | Blank when the career list is empty. | `derived historical feature` |
+| `career_third_pct` | Historical third-place rate. | `runner.career.third_pct` | float | Blank when the career list is empty. | `derived historical feature` |
+| `career_roi` | Historical $1 win-bet ROI. | `runner.career.roi` | float | Blank when the career list is empty. | `derived historical feature` |
+| `career_earnings` | Historical prize money total. | `runner.career.earnings` | float | `0` when no prize money is available. | `derived historical feature` |
+| `career_earnings_potential` | Historical prize money as a share of historical prize pools. | `runner.career.earnings_potential` | float | Blank when no prize-pool data is available. | `derived historical feature` |
+| `career_result_potential` | Historical result-quality aggregate. | `runner.career.result_potential` | float | Blank when required result/starter inputs are missing. | `derived historical feature` |
+| `last_10_wins` | Wins in the most recent up-to-10 prior runs. | `runner.last_10.wins` | integer | `0` when there are no prior wins in the last-10 window. | `derived historical feature` |
+| `last_10_places` | Placings in the most recent up-to-10 prior runs. | `runner.last_10.places` | integer | `0` when there are no placings in the last-10 window. | `derived historical feature` |
+| `last_10_win_pct` | Win rate in the most recent up-to-10 prior runs. | `runner.last_10.win_pct` | float | Blank when the last-10 list is empty. | `derived historical feature` |
+| `last_10_place_pct` | Place rate in the most recent up-to-10 prior runs. | `runner.last_10.place_pct` | float | Blank when the last-10 list is empty. | `derived historical feature` |
+| `last_10_starts` | Number of prior runs included in the last-10 window. | `runner.last_10.starts` | integer | `0` when there are no prior runs. | `derived historical feature` |
+| `last_12_months_starts` | Number of prior runs inside the last 12 months. | `runner.last_12_months.starts` | integer | `0` when there are no matching historical runs. | `derived historical feature` |
+| `at_distance_starts` | Number of prior runs within 100m of the target race distance. | `runner.at_distance.starts` | integer | `0` when there are no matching runs. | `derived historical feature` |
+| `at_distance_win_pct` | Historical win rate within 100m of the target distance. | `runner.at_distance.win_pct` | float | Blank when the distance-matched list is empty. | `derived historical feature` |
+| `on_track_starts` | Number of prior runs on the target track. | `runner.on_track.starts` | integer | `0` when there are no track-matched runs. | `derived historical feature` |
+| `on_track_win_pct` | Historical win rate on the target track. | `runner.on_track.win_pct` | float | Blank when the track-matched list is empty. | `derived historical feature` |
+| `on_good_starts` | Number of prior runs on good tracks. | `runner.on_good.starts` | integer | `0` when there are no good-track runs. | `derived historical feature` |
+| `on_good_win_pct` | Historical win rate on good tracks. | `runner.on_good.win_pct` | float | Blank when the good-track list is empty. | `derived historical feature` |
+| `on_soft_starts` | Number of prior runs on soft tracks. | `runner.on_soft.starts` | integer | `0` when there are no soft-track runs. | `derived historical feature` |
+| `on_soft_win_pct` | Historical win rate on soft tracks. | `runner.on_soft.win_pct` | float | Blank when the soft-track list is empty. | `derived historical feature` |
+| `with_jockey_starts` | Number of prior runs with the current jockey. | `runner.with_jockey.starts` | integer | `0` when there are no same-jockey runs. | `derived historical feature` |
+| `with_jockey_win_pct` | Historical win rate with the current jockey. | `runner.with_jockey.win_pct` | float | Blank when the same-jockey list is empty. | `derived historical feature` |
+| `starting_price` | Current-race starting price if a matching current performance is present. | `runner.starting_price` | float | Blank when the current race result row is absent. | `outcome/target/leakage` |
+| `result` | Current-race finishing result if a matching current performance is present. | `runner.result` | integer | Blank when the current race result row is absent. | `outcome/target/leakage` |
+| `current_performance_profit` | Current-race $1 win-bet profit/loss. | `runner.current_performance.profit` | float | Blank when the current race result row is absent. | `outcome/target/leakage` |
+| `previous_performance_result` | Result of the most recent prior run. | `runner.previous_performance["result"]` | integer | Blank when no prior performance exists. | `derived historical feature` |
+| `previous_performance_starting_price` | Starting price of the most recent prior run. | `runner.previous_performance["starting_price"]` | float | Blank when no prior performance exists or starting price is missing. | `derived historical feature` |
+| `spell_days` | Days since the previous run. | `runner.spell` | integer | Blank when no previous performance exists. | `safe model input` |
+| `up` | Current run number since the last long spell. | `runner.up` | integer | Blank only if underlying runner history cannot be resolved. | `safe model input` |
 
-These are the default safe input columns for pre-race modelling work, assuming the task is to predict the current race without using current-race outcomes:
+## Current safe modelling feature set
+
+These are the current default safe numeric modelling inputs for the local MVP baseline:
 
 - `race_distance`
 - `carrying`
@@ -111,37 +115,17 @@ These are the default safe input columns for pre-race modelling work, assuming t
 - `spell_days`
 - `up`
 
-## Excluded columns
+## Outcome/target candidate columns
 
-These should be excluded by default from pre-race model inputs:
-
-- `runner_id`
-- `race_key`
-- `horse_name`
-- `race_date`
-- `race_track`
-- `runner_number`
-- `starting_price`
-- `result`
-- `current_performance_profit`
-
-## Possible target columns
-
-These are the current columns most likely to be used as targets, depending on the modelling task:
+These columns are useful for evaluation or explicit target-oriented experiments, but not as default pre-race inputs:
 
 - `result`
-  Default race-outcome target.
 - `current_performance_profit`
-  Suitable for profit-oriented or betting-style experiments.
 - `starting_price`
-  Only for explicitly defined market/price modelling tasks; not a default pre-race prediction input.
 
 ## Future schema decisions
 
-- Decide whether `race_date`, `race_track`, `horse_name`, and `runner_number` stay excluded by default or move into an explicitly encoded feature set.
-- Split the generated schema into:
-  - a strict pre-race feature view
-  - an evaluation/target-enriched post-race view
-- Add explicit type/nullability documentation for every column.
-- Version the schema so downstream modelling code can detect breaking changes.
-- Define one canonical target policy per modelling workflow to avoid mixing labels across experiments.
+- Decide whether context columns such as `race_track`, `race_date`, and `runner_number` should stay excluded by default or move into an explicitly encoded feature set.
+- Decide whether a strict pre-race feature export and an evaluation-enriched export should become separate output modes.
+- Add an explicit schema version identifier to the feature table.
+- Add stricter per-column validation for date parsing and required numeric fields when sample inputs move beyond the bundled demo data.

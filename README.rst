@@ -28,6 +28,29 @@ The current modernization work focuses on:
 * keeping Windows-safe tests separate from the original legacy test suite
 * avoiding the old ``cache_requests`` / ``redislite`` dependency path on native Windows
 
+Local MVP
+~~~~~~~~~
+
+The current branch delivers a local, file-based MVP for race-level feature generation and baseline ranking.
+
+What the MVP can do:
+
+* read a local CSV containing one or more race fields plus horse performance history
+* build a deterministic runner-level feature table with ``race_key`` and historical analysis features
+* generate a race-aware baseline ranking report grouped by ``race_key``
+* exclude leakage/outcome columns from model inputs
+* evaluate the toy baseline against known result values when the input includes current-race outcomes
+* run the whole workflow from documented CLI commands with modern tests
+
+What the MVP does not do yet:
+
+* live scraping
+* PDF downloading
+* MongoDB or database-backed ingestion
+* ``Provider`` / scraper integration for production data collection
+* ``cache_requests`` or ``redislite`` workflows
+* production model training or deployment
+
 Install for local development
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -70,6 +93,8 @@ This example reads input from ``data/examples/sample_runner_history.csv`` and wr
 
 It uses the existing ``racing_data`` entity classes while avoiding the legacy ``Provider``, scraper, database, ``cache_requests``, ``redislite``, and ingestion paths.
 
+The bundled sample input contains one same-race field with six runners so the output can be used for race-aware ranking.
+
 Baseline model readiness example
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -85,9 +110,29 @@ You can also pass explicit paths:
 
    python examples\train_baseline_model.py --input data\examples\runner_features.csv --output data\examples\model_report.json
 
-This example reads ``data/examples/runner_features.csv``, excludes leakage/outcome columns such as ``starting_price``, ``result``, and ``current_performance_profit`` from model inputs, and writes a JSON readiness report to ``data/examples/model_report.json`` grouped by ``race_key``.
+This example reads ``data/examples/runner_features.csv``, excludes leakage/outcome columns such as ``starting_price``, ``result``, and ``current_performance_profit`` from model inputs, and writes a race-aware JSON report to ``data/examples/model_report.json`` grouped by ``race_key``.
 
-The bundled sample data is only large enough for a baseline readiness check, not real model training.
+The report includes:
+
+* safe numeric feature selection
+* grouped baseline rankings by race
+* winner/top-1/top-2/top-3 evaluation fields when current-race results are available
+* a small evaluation summary for the sample field
+
+The bundled sample data is intentionally small. The ranking is a transparent toy baseline for pipeline validation, not a production prediction model.
+
+Expected local outputs
+~~~~~~~~~~~~~~~~~~~~~~
+
+Running the local MVP commands produces:
+
+* ``data/examples/runner_features.csv``
+* ``data/examples/model_report.json``
+
+MVP scope note
+~~~~~~~~~~~~~~
+
+Live scraping, website automation, database ingestion, and the original ``Provider`` stack are intentionally outside this MVP. The goal of this branch is a trustworthy local file-to-features-to-ranking workflow that works safely on Windows.
 
 After adding or running these examples, ``python -m pytest`` should still pass for the modern test suite.
 

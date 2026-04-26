@@ -1,7 +1,10 @@
 {
+  "generated_at_utc": "2026-04-26T11:09:00Z",
+  "input_path": "C:\\Users\\mmoll\\MyCodex\\github_research\\racing_data\\data\\examples\\runner_features.csv",
   "total_rows": 6,
+  "race_count": 1,
   "safe_numeric_feature_count": 34,
-  "safe_numeric_feature_columns": [
+  "safe_numeric_features": [
     "race_distance",
     "carrying",
     "actual_weight",
@@ -78,6 +81,7 @@
           "runner_number": 4,
           "horse_name": "Desert Echo",
           "baseline_score": 0.880953,
+          "result": 1,
           "rank": 1
         },
         {
@@ -85,6 +89,7 @@
           "runner_number": 1,
           "horse_name": "Harbour Light",
           "baseline_score": 0.523809,
+          "result": 2,
           "rank": 2
         },
         {
@@ -92,6 +97,7 @@
           "runner_number": 6,
           "horse_name": "Silver Comet",
           "baseline_score": 0.452381,
+          "result": 3,
           "rank": 3
         },
         {
@@ -99,6 +105,7 @@
           "runner_number": 5,
           "horse_name": "Midnight Reef",
           "baseline_score": 0.404762,
+          "result": 5,
           "rank": 4
         },
         {
@@ -106,6 +113,7 @@
           "runner_number": 2,
           "horse_name": "River Crown",
           "baseline_score": 0.323809,
+          "result": 4,
           "rank": 5
         },
         {
@@ -113,9 +121,25 @@
           "runner_number": 3,
           "horse_name": "Coastal Star",
           "baseline_score": -0.095238,
+          "result": 6,
           "rank": 6
         }
-      ]
+      ],
+      "winner_runner_id": "runner-004",
+      "winner_rank": 1,
+      "winner_in_top_1": true,
+      "winner_in_top_2": true,
+      "winner_in_top_3": true
     }
-  ]
+  ],
+  "evaluation_summary": {
+    "race_count": 1,
+    "races_with_results": 1,
+    "winners_in_top_1": 1,
+    "winners_in_top_2": 1,
+    "winners_in_top_3": 1,
+    "top_1_hit_rate": 1.0,
+    "top_2_hit_rate": 1.0,
+    "top_3_hit_rate": 1.0
+  }
 }

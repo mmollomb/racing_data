@@ -63,7 +63,7 @@ def test_feature_table_example_generates_output_from_sample_csv():
             reader = csv.DictReader(input_file)
             rows = list(reader)
 
-        assert len(rows) >= 5
+        assert len(rows) == 6
         assert {row["runner_id"] for row in rows} >= {
             "runner-001",
             "runner-004",
@@ -72,6 +72,7 @@ def test_feature_table_example_generates_output_from_sample_csv():
         assert {row["race_date"] for row in rows} == {"2026-06-20"}
         assert {row["race_track"] for row in rows} == {"Ascot"}
         assert {row["race_distance"] for row in rows} == {"1400"}
+        assert [row["runner_number"] for row in rows] == ["1", "2", "3", "4", "5", "6"]
         assert reader.fieldnames is not None
         assert "race_key" in reader.fieldnames
         assert {row["race_key"] for row in rows} == {"2026-06-20_Ascot_1400"}
@@ -93,10 +94,14 @@ def test_feature_table_example_generates_output_from_sample_csv():
             "with_jockey_win_pct",
             "previous_performance_result",
             "previous_performance_starting_price",
+            "result",
+            "current_performance_profit",
         }.issubset(set(reader.fieldnames))
         assert any(row["career_roi"] != "" for row in rows)
         assert any(row["previous_performance_result"] != "" for row in rows)
         assert any(row["previous_performance_starting_price"] != "" for row in rows)
+        assert any(row["result"] == "1" for row in rows)
+        assert any(row["current_performance_profit"] != "" for row in rows)
     finally:
         cleanup_paths(output_path)
 

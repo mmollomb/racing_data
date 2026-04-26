@@ -3,6 +3,7 @@ import csv
 import json
 import sys
 from collections import defaultdict
+from datetime import datetime, timezone
 from pathlib import Path
 
 
@@ -150,6 +151,13 @@ def parse_runner_number(value):
     return int(value)
 
 
+def parse_optional_int(value):
+    if value == "":
+        return None
+
+    return int(value)
+
+
 def build_baseline_ranking(rows, safe_feature_columns):
     score_columns = [
         column for column in BASELINE_SCORE_COLUMNS if column in safe_feature_columns
@@ -169,6 +177,7 @@ def build_baseline_ranking(rows, safe_feature_columns):
                 "runner_number": parse_runner_number(row["runner_number"]),
                 "horse_name": row["horse_name"],
                 "baseline_score": baseline_score,
+                "result": parse_optional_int(row.get("result", "")),
             }
         )
 
@@ -202,20 +211,69 @@ def build_race_reports(rows, safe_feature_columns):
 
     for race_key in sorted(grouped_rows):
         race_rows = grouped_rows[race_key]
+        baseline_ranking = build_baseline_ranking(race_rows, safe_feature_columns)
+        winner = next(
+            (row for row in baseline_ranking if row["result"] == 1),
+            None,
+        )
+        winner_rank = winner["rank"] if winner is not None else None
+
         race_reports.append(
             {
                 "race_key": race_key,
                 "number_of_runners": len(race_rows),
-                "baseline_ranking": build_baseline_ranking(
-                    race_rows, safe_feature_columns
-                ),
+                "baseline_ranking": baseline_ranking,
+                "winner_runner_id": winner["runner_id"] if winner is not None else None,
+                "winner_rank": winner_rank,
+                "winner_in_top_1": None if winner_rank is None else winner_rank <= 1,
+                "winner_in_top_2": None if winner_rank is None else winner_rank <= 2,
+                "winner_in_top_3": None if winner_rank is None else winner_rank <= 3,
             }
         )
 
     return race_reports
 
 
-def build_model_report(fieldnames, rows):
+def calculate_hit_rate(hits, races_with_results):
+    if races_with_results == 0:
+        return None
+
+    return hits / races_with_results
+
+
+def build_evaluation_summary(race_reports):
+    races_with_results = [
+        race_report for race_report in race_reports if race_report["winner_rank"] is not None
+    ]
+    winners_in_top_1 = sum(
+        1 for race_report in races_with_results if race_report["winner_in_top_1"]
+    )
+    winners_in_top_2 = sum(
+        1 for race_report in races_with_results if race_report["winner_in_top_2"]
+    )
+    winners_in_top_3 = sum(
+        1 for race_report in races_with_results if race_report["winner_in_top_3"]
+    )
+
+    return {
+        "race_count": len(race_reports),
+        "races_with_results": len(races_with_results),
+        "winners_in_top_1": winners_in_top_1,
+        "winners_in_top_2": winners_in_top_2,
+        "winners_in_top_3": winners_in_top_3,
+        "top_1_hit_rate": calculate_hit_rate(
+            winners_in_top_1, len(races_with_results)
+        ),
+        "top_2_hit_rate": calculate_hit_rate(
+            winners_in_top_2, len(races_with_results)
+        ),
+        "top_3_hit_rate": calculate_hit_rate(
+            winners_in_top_3, len(races_with_results)
+        ),
+    }
+
+
+def build_model_report(fieldnames, rows, input_path):
     safe_feature_columns = identify_safe_feature_columns(fieldnames, rows)
     leakage_columns_excluded = [
         column for column in LEAKAGE_COLUMNS if column in fieldnames
@@ -226,11 +284,18 @@ def build_model_report(fieldnames, rows):
     review_before_modelling_columns_excluded = [
         column for column in REVIEW_BEFORE_MODELLING_COLUMNS if column in fieldnames
     ]
+    race_reports = build_race_reports(rows, safe_feature_columns)
 
     return {
+        "generated_at_utc": datetime.now(timezone.utc)
+        .replace(microsecond=0)
+        .isoformat()
+        .replace("+00:00", "Z"),
+        "input_path": str(input_path),
         "total_rows": len(rows),
+        "race_count": len(race_reports),
         "safe_numeric_feature_count": len(safe_feature_columns),
-        "safe_numeric_feature_columns": safe_feature_columns,
+        "safe_numeric_features": safe_feature_columns,
         "leakage_columns_excluded": leakage_columns_excluded,
         "identifier_context_columns_excluded": identifier_context_columns_excluded,
         "review_before_modelling_columns_excluded": review_before_modelling_columns_excluded,
@@ -246,7 +311,8 @@ def build_model_report(fieldnames, rows):
             "Toy baseline ranking for pipeline validation only. "
             "This is not a production model."
         ),
-        "races": build_race_reports(rows, safe_feature_columns),
+        "races": race_reports,
+        "evaluation_summary": build_evaluation_summary(race_reports),
     }
 
 
@@ -263,7 +329,7 @@ def main(argv=None):
     input_path = resolve_repo_path(args.input)
     output_path = resolve_repo_path(args.output)
     fieldnames, rows = load_feature_rows(input_path)
-    report = build_model_report(fieldnames, rows)
+    report = build_model_report(fieldnames, rows, input_path)
     write_report(report, output_path)
     print(f"Wrote model readiness report to {output_path}")
     return 0

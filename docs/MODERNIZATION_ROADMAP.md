@@ -11,7 +11,21 @@ The branch state described here was verified locally with:
 python -m pytest
 ```
 
-and currently passes `39` modern tests on this branch.
+and currently passes `48` modern tests on this branch.
+
+## Status update
+
+The roadmap has partly been executed since this document was first written.
+
+Current verified branch state now includes:
+
+- `python -m pytest` passes `48` modern tests
+- `examples/build_feature_table.py` generates a deterministic local feature table with `race_key`
+- `examples/train_baseline_model.py` generates a race-aware baseline report grouped by `race_key`
+- the bundled sample input now represents one same-race field with six runners
+- the local report includes leakage exclusion, grouped rankings, and a small evaluation summary when current-race results are present
+
+The remaining roadmap stages beyond the current MVP still apply for future work, especially batch input support, schema versioning, CI automation, and any eventual adapter decision.
 
 ## 1. Current project audit
 

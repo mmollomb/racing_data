@@ -63,13 +63,16 @@ def test_train_baseline_model_generates_readiness_report():
         with output_path.open(encoding="utf-8") as input_file:
             report = json.load(input_file)
 
+        assert report["generated_at_utc"].endswith("Z")
+        assert report["input_path"] == str(SAMPLE_INPUT)
         assert report["total_rows"] == 6
+        assert report["race_count"] == 1
         assert (
             report["safe_numeric_feature_count"]
-            == len(report["safe_numeric_feature_columns"])
+            == len(report["safe_numeric_features"])
         )
-        assert "career_roi" in report["safe_numeric_feature_columns"]
-        assert "starting_price" not in report["safe_numeric_feature_columns"]
+        assert "career_roi" in report["safe_numeric_features"]
+        assert "starting_price" not in report["safe_numeric_features"]
         assert report["leakage_columns_excluded"] == MODEL_SCRIPT.LEAKAGE_COLUMNS
         assert (
             report["identifier_context_columns_excluded"]
@@ -83,10 +86,23 @@ def test_train_baseline_model_generates_readiness_report():
         race_report = report["races"][0]
         assert race_report["race_key"] == "2026-06-20_Ascot_1400"
         assert race_report["number_of_runners"] == 6
+        assert race_report["winner_runner_id"] == "runner-004"
+        assert race_report["winner_rank"] == 1
+        assert race_report["winner_in_top_1"] is True
+        assert race_report["winner_in_top_2"] is True
+        assert race_report["winner_in_top_3"] is True
         ranking_rows = race_report["baseline_ranking"]
         assert len(ranking_rows) == 6
         assert ranking_rows[0]["rank"] == 1
         assert ranking_rows[0]["baseline_score"] >= ranking_rows[-1]["baseline_score"]
+        assert [row["runner_id"] for row in ranking_rows] == [
+            "runner-004",
+            "runner-001",
+            "runner-006",
+            "runner-005",
+            "runner-002",
+            "runner-003",
+        ]
         assert {row["runner_id"] for row in ranking_rows} >= {
             "runner-001",
             "runner-004",
@@ -94,9 +110,20 @@ def test_train_baseline_model_generates_readiness_report():
         }
         assert all("runner_number" in row for row in ranking_rows)
         assert all("horse_name" in row for row in ranking_rows)
+        assert all("result" in row for row in ranking_rows)
         assert [row["rank"] for row in ranking_rows] == list(
             range(1, len(ranking_rows) + 1)
         )
+        assert report["evaluation_summary"] == {
+            "race_count": 1,
+            "races_with_results": 1,
+            "winners_in_top_1": 1,
+            "winners_in_top_2": 1,
+            "winners_in_top_3": 1,
+            "top_1_hit_rate": 1.0,
+            "top_2_hit_rate": 1.0,
+            "top_3_hit_rate": 1.0,
+        }
     finally:
         cleanup_paths(output_path)
 

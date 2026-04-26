@@ -336,6 +336,14 @@ def main(argv=None):
         runner = build_runner(provider, runner_id, rows)
         feature_rows.append(build_feature_row(runner_id, runner))
 
+    feature_rows.sort(
+        key=lambda row: (
+            row["race_key"],
+            float("inf") if row["runner_number"] is None else row["runner_number"],
+            row["runner_id"],
+        )
+    )
+
     write_feature_table(feature_rows, output_path)
     print(f"Wrote {len(feature_rows)} feature rows to {output_path}")
     return 0
