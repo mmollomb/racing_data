@@ -194,6 +194,9 @@ def build_runner(provider, runner_id, rows):
 
 
 def build_feature_row(runner_id, runner):
+    current_performance = runner.current_performance
+    previous_performance = runner.previous_performance
+
     return {
         "runner_id": runner_id,
         "horse_name": runner.horse["name"],
@@ -208,13 +211,33 @@ def build_feature_row(runner_id, runner):
         "career_wins": runner.career.wins,
         "career_places": runner.career.places,
         "career_win_pct": runner.career.win_pct,
+        "career_second_pct": runner.career.second_pct,
+        "career_third_pct": runner.career.third_pct,
+        "career_roi": runner.career.roi,
+        "career_earnings": runner.career.earnings,
+        "career_earnings_potential": runner.career.earnings_potential,
+        "career_result_potential": runner.career.result_potential,
+        "last_10_wins": runner.last_10.wins,
+        "last_10_places": runner.last_10.places,
+        "last_10_win_pct": runner.last_10.win_pct,
+        "last_10_place_pct": runner.last_10.place_pct,
         "last_10_starts": runner.last_10.starts,
         "last_12_months_starts": runner.last_12_months.starts,
         "at_distance_starts": runner.at_distance.starts,
+        "at_distance_win_pct": runner.at_distance.win_pct,
         "on_track_starts": runner.on_track.starts,
+        "on_track_win_pct": runner.on_track.win_pct,
         "on_good_starts": runner.on_good.starts,
+        "on_good_win_pct": runner.on_good.win_pct,
         "on_soft_starts": runner.on_soft.starts,
+        "on_soft_win_pct": runner.on_soft.win_pct,
         "with_jockey_starts": runner.with_jockey.starts,
+        "with_jockey_win_pct": runner.with_jockey.win_pct,
+        "starting_price": runner.starting_price,
+        "result": runner.result,
+        "current_performance_profit": current_performance.profit if current_performance is not None else None,
+        "previous_performance_result": previous_performance.get("result") if previous_performance is not None else None,
+        "previous_performance_starting_price": previous_performance.get("starting_price") if previous_performance is not None else None,
         "spell_days": runner.spell,
         "up": runner.up,
     }
