@@ -1,5 +1,6 @@
 import argparse
 import csv
+import sys
 from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
@@ -10,6 +11,43 @@ from racing_data import Horse, Meet, Performance, PerformanceList, Race, Runner
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_INPUT = Path("data/examples/sample_runner_history.csv")
 DEFAULT_OUTPUT = Path("data/examples/runner_features.csv")
+REQUIRED_COLUMNS = [
+    "runner_id",
+    "race_date",
+    "race_track",
+    "race_distance",
+    "race_track_condition",
+    "race_track_circ",
+    "race_track_straight",
+    "race_start_time",
+    "race_number",
+    "runner_number",
+    "horse_name",
+    "horse_url",
+    "runner_jockey_url",
+    "runner_weight",
+    "runner_jockey_claiming",
+    "runner_barrier",
+    "performance_date",
+    "performance_track",
+    "performance_jockey_url",
+    "performance_result",
+    "performance_starting_price",
+    "performance_prize_pool",
+    "performance_prize_money",
+    "performance_starters",
+    "performance_distance",
+    "performance_track_condition",
+    "performance_barrier",
+    "performance_lengths",
+    "performance_carried",
+    "performance_weight",
+    "performance_winning_time",
+]
+
+
+class InputValidationError(Exception):
+    """Raised when the input CSV does not meet the feature-generator contract."""
 
 
 class DummyScraper:
@@ -74,7 +112,7 @@ def format_value(value):
     return str(value)
 
 
-def parse_args():
+def parse_args(argv=None):
     parser = argparse.ArgumentParser(
         description="Build a local feature table from runner history CSV data."
     )
@@ -88,7 +126,7 @@ def parse_args():
         default=str(DEFAULT_OUTPUT),
         help="Output CSV path, relative to the repository root unless absolute.",
     )
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
 def resolve_repo_path(path_value):
@@ -96,12 +134,40 @@ def resolve_repo_path(path_value):
     return path if path.is_absolute() else ROOT / path
 
 
+def validate_input_path(input_path):
+    if not input_path.exists():
+        raise InputValidationError(f"Input file does not exist: {input_path}")
+
+    if not input_path.is_file():
+        raise InputValidationError(f"Input path is not a file: {input_path}")
+
+
+def validate_csv_headers(fieldnames, input_path):
+    if fieldnames is None:
+        raise InputValidationError(f"Input CSV must include a header row: {input_path}")
+
+    missing_columns = [column for column in REQUIRED_COLUMNS if column not in fieldnames]
+    if missing_columns:
+        missing_list = ", ".join(missing_columns)
+        raise InputValidationError(
+            f"Input CSV is missing required columns: {missing_list}"
+        )
+
+
 def load_runner_groups(input_path):
+    validate_input_path(input_path)
+
     groups = defaultdict(list)
 
     with input_path.open(newline="", encoding="utf-8") as input_file:
-        for row in csv.DictReader(input_file):
+        reader = csv.DictReader(input_file)
+        validate_csv_headers(reader.fieldnames, input_path)
+
+        for row in reader:
             groups[row["runner_id"]].append(row)
+
+    if not groups:
+        raise InputValidationError(f"Input CSV contains no data rows: {input_path}")
 
     return groups
 
@@ -254,8 +320,8 @@ def write_feature_table(feature_rows, output_path):
             writer.writerow({key: format_value(value) for key, value in row.items()})
 
 
-def main():
-    args = parse_args()
+def main(argv=None):
+    args = parse_args(argv)
     provider = LocalFileProvider()
     input_path = resolve_repo_path(args.input)
     output_path = resolve_repo_path(args.output)
@@ -268,7 +334,12 @@ def main():
 
     write_feature_table(feature_rows, output_path)
     print(f"Wrote {len(feature_rows)} feature rows to {output_path}")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        raise SystemExit(main())
+    except InputValidationError as error:
+        print(f"Error: {error}", file=sys.stderr)
+        raise SystemExit(1)
