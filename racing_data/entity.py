@@ -7,19 +7,20 @@ class Entity(dict):
     """Common functionality for racing entities"""
 
     def __init__(self, provider, property_cache, *args, **kwargs):
-
         super(Entity, self).__init__(*args, **kwargs)
 
         self.provider = provider
-        self.property_cache = dict(**property_cache) if property_cache is not None else dict()
+        self.property_cache = dict(property_cache) if property_cache is not None else {}
 
         if 'created_at' not in self:
-            self['created_at'] = self['updated_at'] = datetime.now(pytz.utc)
+            timestamp = datetime.now(pytz.utc)
+            self['created_at'] = timestamp
+            self['updated_at'] = timestamp
 
-        for key in self:
-            if isinstance(self[key], datetime):
+        for key, value in list(self.items()):
+            if isinstance(value, datetime):
                 try:
-                    self[key] = pytz.utc.localize(self[key])
+                    self[key] = pytz.utc.localize(value)
                 except ValueError:
                     pass
 
