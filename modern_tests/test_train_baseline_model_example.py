@@ -74,7 +74,16 @@ def test_train_baseline_model_generates_readiness_report():
         )
         assert report["outcome_target_columns_available"] == MODEL_SCRIPT.LEAKAGE_COLUMNS
         assert "too small for real modelling" in report["warning"]
-        assert report["simple_ranking_score"]["rows"][0]["runner_id"] == "runner-001"
+        assert "not a production model" in report["baseline_ranking"]["warning"]
+        assert (
+            report["baseline_ranking"]["score_features_used"]
+            == MODEL_SCRIPT.BASELINE_SCORE_COLUMNS
+        )
+        assert report["baseline_ranking"]["rows"][0]["runner_id"] == "runner-001"
+        assert report["baseline_ranking"]["rows"][0]["horse_name"] == "Test Horse"
+        assert report["baseline_ranking"]["rows"][0]["rank"] == 1
+        assert report["baseline_ranking"]["rows"][0]["baseline_score"] > 0
+        assert report["baseline_ranking"]["rows"][1]["rank"] == 2
     finally:
         cleanup_paths(output_path)
 

@@ -57,26 +57,29 @@
     "current_performance_profit"
   ],
   "warning": "Sample data is too small for real modelling. This report is only a baseline readiness check.",
-  "simple_ranking_score": {
-    "score_columns_used": [
+  "baseline_ranking": {
+    "warning": "Toy baseline ranking for pipeline validation only. This is not a production model.",
+    "score_features_used": [
       "career_win_pct",
-      "career_second_pct",
-      "career_third_pct",
+      "career_roi",
       "last_10_win_pct",
       "last_10_place_pct",
-      "at_distance_win_pct",
       "on_track_win_pct",
-      "with_jockey_win_pct",
-      "career_result_potential"
+      "at_distance_win_pct",
+      "with_jockey_win_pct"
     ],
     "rows": [
       {
         "runner_id": "runner-001",
-        "simple_score": 0.42963
+        "horse_name": "Test Horse",
+        "baseline_score": 0.5,
+        "rank": 1
       },
       {
         "runner_id": "runner-002",
-        "simple_score": 0.272727
+        "horse_name": "Second Horse",
+        "baseline_score": 0.261905,
+        "rank": 2
       }
     ]
   }

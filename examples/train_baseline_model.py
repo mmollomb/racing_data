@@ -32,16 +32,14 @@ REVIEW_BEFORE_MODELLING_COLUMNS = [
     "race_track",
     "runner_number",
 ]
-SIMPLE_SCORE_COLUMNS = [
+BASELINE_SCORE_COLUMNS = [
     "career_win_pct",
-    "career_second_pct",
-    "career_third_pct",
+    "career_roi",
     "last_10_win_pct",
     "last_10_place_pct",
-    "at_distance_win_pct",
     "on_track_win_pct",
+    "at_distance_win_pct",
     "with_jockey_win_pct",
-    "career_result_potential",
 ]
 
 
@@ -137,9 +135,9 @@ def identify_safe_feature_columns(fieldnames, rows):
     ]
 
 
-def build_simple_score_preview(rows, safe_feature_columns):
+def build_baseline_ranking(rows, safe_feature_columns):
     score_columns = [
-        column for column in SIMPLE_SCORE_COLUMNS if column in safe_feature_columns
+        column for column in BASELINE_SCORE_COLUMNS if column in safe_feature_columns
     ]
     ranked_rows = []
 
@@ -149,23 +147,31 @@ def build_simple_score_preview(rows, safe_feature_columns):
             for column in score_columns
             if row.get(column, "") != ""
         ]
-        score = round(sum(values) / len(values), 6) if values else None
+        baseline_score = round(sum(values) / len(values), 6) if values else None
         ranked_rows.append(
             {
                 "runner_id": row["runner_id"],
-                "simple_score": score,
+                "horse_name": row["horse_name"],
+                "baseline_score": baseline_score,
             }
         )
 
     ranked_rows.sort(
         key=lambda item: (
-            item["simple_score"] is None,
-            0 if item["simple_score"] is None else -item["simple_score"],
+            item["baseline_score"] is None,
+            0 if item["baseline_score"] is None else -item["baseline_score"],
         )
     )
 
+    for index, row in enumerate(ranked_rows, start=1):
+        row["rank"] = index
+
     return {
-        "score_columns_used": score_columns,
+        "warning": (
+            "Toy baseline ranking for pipeline validation only. "
+            "This is not a production model."
+        ),
+        "score_features_used": score_columns,
         "rows": ranked_rows,
     }
 
@@ -194,7 +200,7 @@ def build_model_report(fieldnames, rows):
             "Sample data is too small for real modelling. "
             "This report is only a baseline readiness check."
         ),
-        "simple_ranking_score": build_simple_score_preview(
+        "baseline_ranking": build_baseline_ranking(
             rows, safe_feature_columns
         ),
     }
