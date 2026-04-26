@@ -16,6 +16,50 @@ This project aims to provide horse racing data management and analysis services 
     :target: https://landscape.io/github/justjasongreen/racing_data/master
     :alt: Code Health
 
+Modernization branch notes
+--------------------------
+
+This fork contains a ``modernize-analysis-layer`` branch used to explore and modernize the core analysis/entity layer of ``racing_data`` while avoiding the legacy scraper/database dependency stack for now.
+
+The current modernization work focuses on:
+
+* preserving the existing racing entity classes
+* testing the analysis behavior of ``Runner``, ``Horse``, ``Performance`` and ``PerformanceList``
+* keeping Windows-safe tests separate from the original legacy test suite
+* avoiding the old ``cache_requests`` / ``redislite`` dependency path on native Windows
+
+Install for local development
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+From the repository root:
+
+.. code-block:: cmd
+
+   py -m venv .venv
+   .venv\Scripts\activate
+   pip install -e .
+   pip install pytest
+
+Run modern tests
+~~~~~~~~~~~~~~~~
+
+The modern test suite is configured through ``pyproject.toml``. Run:
+
+.. code-block:: cmd
+
+   python -m pytest
+
+This runs the Windows-safe modern tests in ``modern_tests``.
+
+Why legacy tests are avoided for now
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The original ``tests/`` folder depends on the legacy provider/scraper stack, including packages such as ``cache_requests`` and ``redislite``. On native Windows, ``redislite`` is not supported, so the old test stack is intentionally left untouched during the first phase of modernization.
+
+Purpose of this branch
+~~~~~~~~~~~~~~~~~~~~~~
+
+The purpose of the ``modernize-analysis-layer`` branch is to establish a safe modern baseline before changing package internals. The current priority is to protect known working feature calculations with tests before any deeper refactoring.
 
 ************
 Installation
