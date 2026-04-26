@@ -2,6 +2,7 @@ import argparse
 import csv
 import json
 import sys
+from collections import defaultdict
 from pathlib import Path
 
 
@@ -10,9 +11,8 @@ DEFAULT_INPUT = Path("data/examples/runner_features.csv")
 DEFAULT_OUTPUT = Path("data/examples/model_report.json")
 REQUIRED_COLUMNS = [
     "runner_id",
+    "race_key",
     "horse_name",
-    "race_date",
-    "race_track",
     "runner_number",
     "starting_price",
     "result",
@@ -25,6 +25,7 @@ LEAKAGE_COLUMNS = [
 ]
 IDENTIFIER_CONTEXT_COLUMNS = [
     "runner_id",
+    "race_key",
 ]
 REVIEW_BEFORE_MODELLING_COLUMNS = [
     "horse_name",
@@ -135,6 +136,20 @@ def identify_safe_feature_columns(fieldnames, rows):
     ]
 
 
+def parse_optional_number(value):
+    if value == "":
+        return None
+
+    return float(value)
+
+
+def parse_runner_number(value):
+    if value == "":
+        return None
+
+    return int(value)
+
+
 def build_baseline_ranking(rows, safe_feature_columns):
     score_columns = [
         column for column in BASELINE_SCORE_COLUMNS if column in safe_feature_columns
@@ -143,7 +158,7 @@ def build_baseline_ranking(rows, safe_feature_columns):
 
     for row in rows:
         values = [
-            float(row[column])
+            parse_optional_number(row[column])
             for column in score_columns
             if row.get(column, "") != ""
         ]
@@ -151,6 +166,7 @@ def build_baseline_ranking(rows, safe_feature_columns):
         ranked_rows.append(
             {
                 "runner_id": row["runner_id"],
+                "runner_number": parse_runner_number(row["runner_number"]),
                 "horse_name": row["horse_name"],
                 "baseline_score": baseline_score,
             }
@@ -160,25 +176,48 @@ def build_baseline_ranking(rows, safe_feature_columns):
         key=lambda item: (
             item["baseline_score"] is None,
             0 if item["baseline_score"] is None else -item["baseline_score"],
+            item["runner_number"] is None,
+            0 if item["runner_number"] is None else item["runner_number"],
         )
     )
 
     for index, row in enumerate(ranked_rows, start=1):
         row["rank"] = index
 
-    return {
-        "warning": (
-            "Toy baseline ranking for pipeline validation only. "
-            "This is not a production model."
-        ),
-        "score_features_used": score_columns,
-        "rows": ranked_rows,
-    }
+    return ranked_rows
+
+
+def group_rows_by_race(rows):
+    grouped_rows = defaultdict(list)
+
+    for row in rows:
+        grouped_rows[row["race_key"]].append(row)
+
+    return grouped_rows
+
+
+def build_race_reports(rows, safe_feature_columns):
+    race_reports = []
+    grouped_rows = group_rows_by_race(rows)
+
+    for race_key in sorted(grouped_rows):
+        race_rows = grouped_rows[race_key]
+        race_reports.append(
+            {
+                "race_key": race_key,
+                "number_of_runners": len(race_rows),
+                "baseline_ranking": build_baseline_ranking(
+                    race_rows, safe_feature_columns
+                ),
+            }
+        )
+
+    return race_reports
 
 
 def build_model_report(fieldnames, rows):
     safe_feature_columns = identify_safe_feature_columns(fieldnames, rows)
-    excluded_leakage_columns = [
+    leakage_columns_excluded = [
         column for column in LEAKAGE_COLUMNS if column in fieldnames
     ]
     identifier_context_columns_excluded = [
@@ -189,20 +228,25 @@ def build_model_report(fieldnames, rows):
     ]
 
     return {
-        "row_count": len(rows),
-        "feature_count": len(safe_feature_columns),
-        "safe_feature_columns": safe_feature_columns,
-        "excluded_leakage_columns": excluded_leakage_columns,
+        "total_rows": len(rows),
+        "safe_numeric_feature_count": len(safe_feature_columns),
+        "safe_numeric_feature_columns": safe_feature_columns,
+        "leakage_columns_excluded": leakage_columns_excluded,
         "identifier_context_columns_excluded": identifier_context_columns_excluded,
         "review_before_modelling_columns_excluded": review_before_modelling_columns_excluded,
-        "outcome_target_columns_available": excluded_leakage_columns,
+        "outcome_target_columns_available": leakage_columns_excluded,
+        "score_features_used": [
+            column for column in BASELINE_SCORE_COLUMNS if column in safe_feature_columns
+        ],
         "warning": (
             "Sample data is too small for real modelling. "
             "This report is only a baseline readiness check."
         ),
-        "baseline_ranking": build_baseline_ranking(
-            rows, safe_feature_columns
+        "baseline_warning": (
+            "Toy baseline ranking for pipeline validation only. "
+            "This is not a production model."
         ),
+        "races": build_race_reports(rows, safe_feature_columns),
     }
 
 

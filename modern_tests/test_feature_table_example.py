@@ -73,6 +73,8 @@ def test_feature_table_example_generates_output_from_sample_csv():
         assert {row["race_track"] for row in rows} == {"Ascot"}
         assert {row["race_distance"] for row in rows} == {"1400"}
         assert reader.fieldnames is not None
+        assert "race_key" in reader.fieldnames
+        assert {row["race_key"] for row in rows} == {"2026-06-20_Ascot_1400"}
         assert {
             "career_second_pct",
             "career_third_pct",

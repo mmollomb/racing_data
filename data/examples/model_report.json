@@ -1,7 +1,7 @@
 {
-  "row_count": 6,
-  "feature_count": 34,
-  "safe_feature_columns": [
+  "total_rows": 6,
+  "safe_numeric_feature_count": 34,
+  "safe_numeric_feature_columns": [
     "race_distance",
     "carrying",
     "actual_weight",
@@ -37,13 +37,14 @@
     "spell_days",
     "up"
   ],
-  "excluded_leakage_columns": [
+  "leakage_columns_excluded": [
     "starting_price",
     "result",
     "current_performance_profit"
   ],
   "identifier_context_columns_excluded": [
-    "runner_id"
+    "runner_id",
+    "race_key"
   ],
   "review_before_modelling_columns_excluded": [
     "horse_name",
@@ -56,55 +57,65 @@
     "result",
     "current_performance_profit"
   ],
+  "score_features_used": [
+    "career_win_pct",
+    "career_roi",
+    "last_10_win_pct",
+    "last_10_place_pct",
+    "on_track_win_pct",
+    "at_distance_win_pct",
+    "with_jockey_win_pct"
+  ],
   "warning": "Sample data is too small for real modelling. This report is only a baseline readiness check.",
-  "baseline_ranking": {
-    "warning": "Toy baseline ranking for pipeline validation only. This is not a production model.",
-    "score_features_used": [
-      "career_win_pct",
-      "career_roi",
-      "last_10_win_pct",
-      "last_10_place_pct",
-      "on_track_win_pct",
-      "at_distance_win_pct",
-      "with_jockey_win_pct"
-    ],
-    "rows": [
-      {
-        "runner_id": "runner-004",
-        "horse_name": "Desert Echo",
-        "baseline_score": 0.880953,
-        "rank": 1
-      },
-      {
-        "runner_id": "runner-001",
-        "horse_name": "Harbour Light",
-        "baseline_score": 0.523809,
-        "rank": 2
-      },
-      {
-        "runner_id": "runner-006",
-        "horse_name": "Silver Comet",
-        "baseline_score": 0.452381,
-        "rank": 3
-      },
-      {
-        "runner_id": "runner-005",
-        "horse_name": "Midnight Reef",
-        "baseline_score": 0.404762,
-        "rank": 4
-      },
-      {
-        "runner_id": "runner-002",
-        "horse_name": "River Crown",
-        "baseline_score": 0.323809,
-        "rank": 5
-      },
-      {
-        "runner_id": "runner-003",
-        "horse_name": "Coastal Star",
-        "baseline_score": -0.095238,
-        "rank": 6
-      }
-    ]
-  }
+  "baseline_warning": "Toy baseline ranking for pipeline validation only. This is not a production model.",
+  "races": [
+    {
+      "race_key": "2026-06-20_Ascot_1400",
+      "number_of_runners": 6,
+      "baseline_ranking": [
+        {
+          "runner_id": "runner-004",
+          "runner_number": 4,
+          "horse_name": "Desert Echo",
+          "baseline_score": 0.880953,
+          "rank": 1
+        },
+        {
+          "runner_id": "runner-001",
+          "runner_number": 1,
+          "horse_name": "Harbour Light",
+          "baseline_score": 0.523809,
+          "rank": 2
+        },
+        {
+          "runner_id": "runner-006",
+          "runner_number": 6,
+          "horse_name": "Silver Comet",
+          "baseline_score": 0.452381,
+          "rank": 3
+        },
+        {
+          "runner_id": "runner-005",
+          "runner_number": 5,
+          "horse_name": "Midnight Reef",
+          "baseline_score": 0.404762,
+          "rank": 4
+        },
+        {
+          "runner_id": "runner-002",
+          "runner_number": 2,
+          "horse_name": "River Crown",
+          "baseline_score": 0.323809,
+          "rank": 5
+        },
+        {
+          "runner_id": "runner-003",
+          "runner_number": 3,
+          "horse_name": "Coastal Star",
+          "baseline_score": -0.095238,
+          "rank": 6
+        }
+      ]
+    }
+  ]
 }

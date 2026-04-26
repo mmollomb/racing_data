@@ -63,24 +63,28 @@ def test_train_baseline_model_generates_readiness_report():
         with output_path.open(encoding="utf-8") as input_file:
             report = json.load(input_file)
 
-        assert report["row_count"] >= 5
-        assert report["feature_count"] == len(report["safe_feature_columns"])
-        assert "career_roi" in report["safe_feature_columns"]
-        assert "starting_price" not in report["safe_feature_columns"]
-        assert report["excluded_leakage_columns"] == MODEL_SCRIPT.LEAKAGE_COLUMNS
+        assert report["total_rows"] == 6
+        assert (
+            report["safe_numeric_feature_count"]
+            == len(report["safe_numeric_feature_columns"])
+        )
+        assert "career_roi" in report["safe_numeric_feature_columns"]
+        assert "starting_price" not in report["safe_numeric_feature_columns"]
+        assert report["leakage_columns_excluded"] == MODEL_SCRIPT.LEAKAGE_COLUMNS
         assert (
             report["identifier_context_columns_excluded"]
             == MODEL_SCRIPT.IDENTIFIER_CONTEXT_COLUMNS
         )
         assert report["outcome_target_columns_available"] == MODEL_SCRIPT.LEAKAGE_COLUMNS
         assert "too small for real modelling" in report["warning"]
-        assert "not a production model" in report["baseline_ranking"]["warning"]
-        assert (
-            report["baseline_ranking"]["score_features_used"]
-            == MODEL_SCRIPT.BASELINE_SCORE_COLUMNS
-        )
-        ranking_rows = report["baseline_ranking"]["rows"]
-        assert len(ranking_rows) >= 5
+        assert "not a production model" in report["baseline_warning"]
+        assert report["score_features_used"] == MODEL_SCRIPT.BASELINE_SCORE_COLUMNS
+        assert len(report["races"]) == 1
+        race_report = report["races"][0]
+        assert race_report["race_key"] == "2026-06-20_Ascot_1400"
+        assert race_report["number_of_runners"] == 6
+        ranking_rows = race_report["baseline_ranking"]
+        assert len(ranking_rows) == 6
         assert ranking_rows[0]["rank"] == 1
         assert ranking_rows[0]["baseline_score"] >= ranking_rows[-1]["baseline_score"]
         assert {row["runner_id"] for row in ranking_rows} >= {
@@ -88,6 +92,7 @@ def test_train_baseline_model_generates_readiness_report():
             "runner-004",
             "runner-006",
         }
+        assert all("runner_number" in row for row in ranking_rows)
         assert all("horse_name" in row for row in ranking_rows)
         assert [row["rank"] for row in ranking_rows] == list(
             range(1, len(ranking_rows) + 1)

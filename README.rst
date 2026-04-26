@@ -85,7 +85,7 @@ You can also pass explicit paths:
 
    python examples\train_baseline_model.py --input data\examples\runner_features.csv --output data\examples\model_report.json
 
-This example reads ``data/examples/runner_features.csv``, excludes leakage/outcome columns such as ``starting_price``, ``result``, and ``current_performance_profit`` from model inputs, and writes a JSON readiness report to ``data/examples/model_report.json``.
+This example reads ``data/examples/runner_features.csv``, excludes leakage/outcome columns such as ``starting_price``, ``result``, and ``current_performance_profit`` from model inputs, and writes a JSON readiness report to ``data/examples/model_report.json`` grouped by ``race_key``.
 
 The bundled sample data is only large enough for a baseline readiness check, not real model training.
 

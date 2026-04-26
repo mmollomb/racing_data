@@ -33,6 +33,7 @@ If a modelling task is intended to make predictions before the race is run, the 
 | `race_date` | `review_before_modelling` | Useful context, but requires an explicit time encoding and train/test split policy. |
 | `race_track` | `review_before_modelling` | Useful context, but should only be used after an explicit categorical encoding decision. |
 | `race_distance` | `pre_race_feature` | Declared race distance; available before the race. |
+| `race_key` | `identifier/context` | Stable per-race identifier derived from date, track, and distance for grouping/reporting. |
 | `runner_number` | `review_before_modelling` | Program number, not barrier; keep only if a modelling use case is explicitly justified. |
 | `carrying` | `pre_race_feature` | Current listed weight less allowances. |
 | `actual_weight` | `pre_race_feature` | Horse weight baseline plus carried weight. |
@@ -115,6 +116,7 @@ These are the default safe input columns for pre-race modelling work, assuming t
 These should be excluded by default from pre-race model inputs:
 
 - `runner_id`
+- `race_key`
 - `horse_name`
 - `race_date`
 - `race_track`

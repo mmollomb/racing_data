@@ -262,13 +262,17 @@ def build_runner(provider, runner_id, rows):
 def build_feature_row(runner_id, runner):
     current_performance = runner.current_performance
     previous_performance = runner.previous_performance
+    race_date = runner.race.meet["date"].date().isoformat()
+    race_track = runner.race.meet["track"]
+    race_distance = runner.race["distance"]
 
     return {
         "runner_id": runner_id,
         "horse_name": runner.horse["name"],
-        "race_date": runner.race.meet["date"].date().isoformat(),
-        "race_track": runner.race.meet["track"],
-        "race_distance": runner.race["distance"],
+        "race_date": race_date,
+        "race_track": race_track,
+        "race_distance": race_distance,
+        "race_key": f"{race_date}_{race_track}_{race_distance}",
         "runner_number": runner["number"],
         "carrying": runner.carrying,
         "actual_weight": runner.actual_weight,
