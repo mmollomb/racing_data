@@ -81,14 +81,13 @@ class Performance(Entity):
     def profit(self):
         """Return the profit earned on a win bet for this performance"""
 
-        profit = -1.00
-        if self['result'] == 1:
-            if self['starting_price'] is None:
-                profit = 0.00
-            else:
-                profit += self['starting_price']
+        if self['result'] != 1:
+            return -1.00
 
-        return profit
+        if self['starting_price'] is None:
+            return 0.00
+
+        return self['starting_price'] - 1.00
 
     @property
     def speed(self):
