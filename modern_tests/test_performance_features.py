@@ -1,4 +1,5 @@
-from modern_tests.helpers import build_runner_form_graph
+from modern_tests.helpers import DummyProvider, build_runner_form_graph
+from racing_data.performance import Performance
 
 
 def get_first_performance():
@@ -28,6 +29,20 @@ def test_performance_profit_for_loser():
     assert performance.profit == -1.0
 
 
+def test_performance_profit_for_winner_without_starting_price():
+    performance = Performance(
+        DummyProvider(),
+        None,
+        {
+            "result": 1,
+            "starting_price": None,
+            "scraper_version": "test",
+        },
+    )
+
+    assert performance.profit == 0.0
+
+
 def test_performance_actual_weight():
     performance = get_first_performance()
 
@@ -50,6 +65,60 @@ def test_performance_speed():
     performance = get_first_performance()
 
     assert round(performance.speed, 6) == round(17.14288095236442, 6)
+
+
+def test_performance_speed_is_none_when_winning_time_is_none():
+    performance = Performance(
+        DummyProvider(),
+        None,
+        {
+            "distance": 1200,
+            "barrier": 2,
+            "lengths": 0,
+            "carried": 56.5,
+            "weight": 56.5,
+            "winning_time": None,
+            "scraper_version": "test",
+        },
+    )
+
+    assert performance.speed is None
+
+
+def test_performance_speed_is_none_when_winning_time_is_zero():
+    performance = Performance(
+        DummyProvider(),
+        None,
+        {
+            "distance": 1200,
+            "barrier": 2,
+            "lengths": 0,
+            "carried": 56.5,
+            "weight": 56.5,
+            "winning_time": 0,
+            "scraper_version": "test",
+        },
+    )
+
+    assert performance.speed is None
+
+
+def test_performance_speed_is_none_when_distance_is_none():
+    performance = Performance(
+        DummyProvider(),
+        None,
+        {
+            "distance": None,
+            "barrier": 2,
+            "lengths": 0,
+            "carried": 56.5,
+            "weight": 56.5,
+            "winning_time": 70.0,
+            "scraper_version": "test",
+        },
+    )
+
+    assert performance.speed is None
 
 
 def test_performance_momentum():
