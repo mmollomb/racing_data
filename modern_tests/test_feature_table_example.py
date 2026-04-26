@@ -60,13 +60,35 @@ def test_feature_table_example_generates_output_from_sample_csv():
         assert output_path.exists()
 
         with output_path.open(newline="", encoding="utf-8") as input_file:
-            rows = list(csv.DictReader(input_file))
+            reader = csv.DictReader(input_file)
+            rows = list(reader)
 
         assert len(rows) == 2
         assert rows[0]["runner_id"] == "runner-001"
         assert rows[1]["runner_id"] == "runner-002"
-        assert "career_roi" in rows[0]
-        assert "previous_performance_result" in rows[0]
+        assert reader.fieldnames is not None
+        assert {
+            "career_second_pct",
+            "career_third_pct",
+            "career_roi",
+            "career_earnings",
+            "career_earnings_potential",
+            "career_result_potential",
+            "last_10_wins",
+            "last_10_places",
+            "last_10_win_pct",
+            "last_10_place_pct",
+            "on_good_win_pct",
+            "on_soft_win_pct",
+            "on_track_win_pct",
+            "at_distance_win_pct",
+            "with_jockey_win_pct",
+            "previous_performance_result",
+            "previous_performance_starting_price",
+        }.issubset(set(reader.fieldnames))
+        assert rows[0]["career_roi"] == "0.666667"
+        assert rows[0]["previous_performance_result"] == "1"
+        assert rows[0]["previous_performance_starting_price"] == "5"
     finally:
         cleanup_paths(output_path)
 
