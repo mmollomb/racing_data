@@ -49,6 +49,9 @@ class Runner(Entity):
     def actual_weight(self):
         """Return the average racehorse weight plus the listed weight less allowances for this runner"""
 
+        if self.carrying is None:
+            return HORSE_WEIGHT
+
         return HORSE_WEIGHT + self.carrying
 
     @property
