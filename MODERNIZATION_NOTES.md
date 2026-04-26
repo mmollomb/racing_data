@@ -114,7 +114,7 @@ Expected result:
 
 ```text
 
-36 passed
+39 passed
 
 ```
 
@@ -136,7 +136,7 @@ Modern tests now cover:
 
 \- Experiment smoke tests confirming the exploratory scripts still run
 
-\- Runner edge cases including missing jockey claim, missing weight, and missing race distance
+\- Runner edge cases including missing jockey claim, missing weight, `Runner.actual_weight` missing-carrying behavior, and `Runner.actual_distance` barrier/missing-distance handling
 
 Package-code cleanups completed so far:
 
@@ -149,6 +149,8 @@ Package-code cleanups completed so far:
 \- `Performance.speed` early-return clarification
 
 \- `Runner.carrying` missing-value handling and readability cleanup
+
+\- `Runner.actual_weight` missing-carrying handling
 
 
 The modernization branch remains focused on preserving the working analysis/entity layer before making deeper changes to provider, scraper, or database behavior.
